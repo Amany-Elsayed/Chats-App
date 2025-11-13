@@ -18,7 +18,7 @@ app.use(cors());
 
 app.use("/api/users", userRoutes);
 app.use("/api/chats", chatRoutes);
-// app.use("/api/messages", messageRoutes);
+app.use("/api/messages", messageRoutes);
 
 app.use(notFound);
 app.use(errorHandler);
