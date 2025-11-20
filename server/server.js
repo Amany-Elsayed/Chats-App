@@ -56,6 +56,7 @@ io.on("connection", (socket) => {
     console.log("User disconnected");
     socket.leave(userData._id);
   });
+
 });
 
 const PORT = process.env.PORT || 5000;
