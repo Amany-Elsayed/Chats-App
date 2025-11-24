@@ -1,48 +1,49 @@
 import { HttpClient } from '@angular/common/http';
-import { Injectable, signal } from '@angular/core';
-import { Iuser } from '../models/iuser';
+import { Injectable } from '@angular/core';
+import { BehaviorSubject, Observable } from 'rxjs';
+import { tap } from 'rxjs/operators';
+import { IUser } from '../models/iuser';
 import { enviroment } from '../../enviroments/enviroment';
-import { tap } from 'rxjs/operators'
-import { Observable } from 'rxjs';
 
 @Injectable({
   providedIn: 'root',
 })
 export class AuthService {
-  private api = `${enviroment.apiUrl}/users`
-  currentUser = signal<Iuser | null>(null)
+  private api = `${enviroment.apiUrl}/users`;
+  private currentUserSubject = new BehaviorSubject<IUser | null>(null);
+
+  currentUser$ = this.currentUserSubject.asObservable();
 
   constructor(private http: HttpClient) {
-    const raw = localStorage.getItem("userInfo")
-    if (raw) this.currentUser.set(JSON.parse(raw))
+    const raw = localStorage.getItem('userInfo');
+    if (raw) this.currentUserSubject.next(JSON.parse(raw));
   }
 
-  login(data: { email: string; password: string }) {
-    return this.http.post<Iuser>(`${this.api}/login`, data).pipe(
+  login(data: { email: string; password: string }): Observable<IUser> {
+    return this.http.post<IUser>(`${this.api}/login`, data).pipe(
       tap(user => this.setUser(user))
     );
   }
 
-  register(data: {name: string; email: string; password: string; pic?:string}) {
-    return this.http.post<Iuser>(`${this.api}/register`, data).pipe(
-      tap(user => {this.setUser(user)})
-    )
+  register(data: { name: string; email: string; password: string; pic?: string })
+    : Observable<IUser>
+  {
+    return this.http.post<IUser>(`${this.api}/register`, data).pipe(
+      tap(user => this.setUser(user))
+    );
   }
 
-  setUser(user: Iuser) {
-    this.currentUser.set(user)
-    localStorage.setItem("userInfo", JSON.stringify(user))
+  private setUser(user: IUser) {
+    this.currentUserSubject.next(user);
+    localStorage.setItem('userInfo', JSON.stringify(user));
   }
 
   logout() {
-    this.currentUser.set(null)
-    localStorage.removeItem("userInfo")
+    this.currentUserSubject.next(null);
+    localStorage.removeItem('userInfo');
   }
 
   getToken(): string | null {
-  const u = this.currentUser()
-  return u?.token ?? null
+    return this.currentUserSubject.value?.token ?? null;
   }
 }
-
-

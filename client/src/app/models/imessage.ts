@@ -1,11 +1,11 @@
-import { Ichat } from "./ichat"
-import { Iuser } from "./iuser"
+import { IChat } from "./ichat"
+import { IUser } from "./iuser"
 
-export interface Imessage {
+export interface IMessage {
     _id: string
-    sender: Iuser
+    sender: IUser
     content: string
-    chat: Ichat
+    chat: IChat
     createdAt: string
     updatedAt: string
 }

@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { io, Socket} from 'socket.io-client'
 import { enviroment } from '../../enviroments/enviroment';
-import { Imessage } from '../models/imessage';
+import { IMessage } from '../models/imessage';
 @Injectable({
   providedIn: 'root',
 })
@@ -24,11 +24,11 @@ export class SocketService {
     this.socket.emit('join chat', chatId)
   }
 
-  sendMessage(message: Imessage) {
+  sendMessage(message: IMessage) {
     this.socket.emit('new message', message)
   }
 
-  onMessageReceived(handler: (msg: Imessage) => void) {
+  onMessageReceived(handler: (msg: IMessage) => void) {
     this.socket.on('message received', handler)
   }
 }

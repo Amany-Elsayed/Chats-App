@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { enviroment } from '../../enviroments/enviroment';
 import { HttpClient } from '@angular/common/http';
-import { Imessage } from '../models/imessage';
+import { IMessage } from '../models/imessage';
 
 @Injectable({
   providedIn: 'root',
@@ -12,10 +12,10 @@ export class MessageService {
   constructor(private http: HttpClient) {}
 
   sendMessage(content: string, chatId: string) {
-    return this.http.post<Imessage>(`${this.api}`, { content, chatId })
+    return this.http.post<IMessage>(`${this.api}`, { content, chatId })
   }
 
   getMessages(chatId: string) {
-    return this.http.get<Imessage[]>(`${this.api}/${chatId}`)
+    return this.http.get<IMessage[]>(`${this.api}/${chatId}`)
   }
 }

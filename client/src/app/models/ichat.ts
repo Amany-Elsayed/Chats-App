@@ -1,11 +1,11 @@
-import { Imessage } from "./imessage"
-import { Iuser } from "./iuser"
+import { IMessage } from "./imessage"
+import { IUser } from "./iuser"
 
-export interface Ichat {
+export interface IChat {
     _id: string
     chatName: string
     isGroupChat: boolean
-    users: Iuser[]
-    latestMessage?: Imessage
-    groupAdmin?: Iuser
+    users: IUser[]
+    latestMessage?: IMessage
+    groupAdmin?: IUser
 }
