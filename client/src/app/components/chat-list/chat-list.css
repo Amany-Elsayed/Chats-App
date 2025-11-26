@@ -1,0 +1,14 @@
+.chat-list-container {
+  height: 100%;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.chat-item {
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.chat-item:hover {
+  background: #f1f1f1;
+}

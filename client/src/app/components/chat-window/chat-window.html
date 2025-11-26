@@ -1,1 +1,45 @@
-<p>chat-window works!</p>
+<div class="chat-window card shadow-sm">
+  @if (!selectedChat) {
+    <div class="empty-chat text-center text-muted">
+      <p>Select a chat to start messaging</p>
+    </div>
+  }
+
+  @if (selectedChat) {
+    <div class="card-header bg-primary text-white">
+      <h5 class="mb-0">{{ selectedChat.chatName }}</h5>
+    </div>
+
+    <div class="messages-area" #scrollArea>
+      @if (loading) {
+        <div class="text-center py-3">
+          <div class="spinner-border"></div>
+        </div>
+      }
+
+      @for (msg of messages; track msg._id) {
+        <div class="message-bubble"
+             [class.me]="msg.sender._id === currentUserId">
+
+          <div class="bubble">
+            {{ msg.content }}
+          </div>
+
+          <small class="timestamp text-muted">
+            {{ msg.createdAt | date:'shortTime' }}
+          </small>
+        </div>
+      }
+    </div>
+
+    <div class="input-area">
+      <input 
+        type="text" 
+        class="form-control form-control-lg"
+        placeholder="Type a message…"
+        #msgInput
+        (keyup.enter)="sendMessage(msgInput.value); msgInput.value=''"
+      />
+    </div>
+  }
+</div>
