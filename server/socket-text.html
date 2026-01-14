@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+</head>
+<body>
+<script>
+  const socket = io("http://localhost:3000");
+
+  const myId = "ALICE_ID";
+  const receiverId = "AMANY_ID";
+
+  socket.emit("join", myId);
+
+  socket.on("newMessage", msg => {
+    console.log("Received:", msg);
+  });
+
+  setTimeout(() => {
+    socket.emit("sendMessage", {
+      sender: myId,
+      receiver: receiverId,
+      content: "Hello Amany"
+    });
+  }, 2000);
+</script>
+</body>
+</html>
