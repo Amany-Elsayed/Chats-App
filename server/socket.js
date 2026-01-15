@@ -1,22 +1,29 @@
-const socketIO = require("socket.io")
+const Message = require("./models/Message");
 
 const socket = (server) => {
-    const io = socketIO(server, {
-        cors: {origin: "*"}
+  const io = require("socket.io")(server, {
+    cors: { origin: "*" }
+  })
+
+  io.on("connection", (socket) => {
+    console.log("Socket connected:", socket.id)
+
+    socket.on("join", (userId) => {
+      socket.join(userId)
     })
 
-    io.on("connection", socket => {
+    socket.on("sendMessage", async (msg) => {
+      console.log("Incoming message:", msg)
 
-        socket.on("join", userId => {
-            socket.join(userId)
-        })
+      const savedMessage = await Message.create({
+        sender: msg.sender,
+        receiver: msg.receiver,
+        content: msg.content
+      })
 
-        socket.on("sendMessage", msg => {
-            io.to(msg.receiver).emit("newMessage", msg)
-        })
-
-        socket.on("disconnect", () => {})
+      io.to(msg.receiver).emit("newMessage", savedMessage)
     })
+  })
 }
 
 module.exports = socket

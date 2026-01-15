@@ -1,28 +1,40 @@
 <!DOCTYPE html>
 <html>
 <head>
+  <title>Socket Test</title>
   <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
 </head>
 <body>
+<h2>Socket.IO Test</h2>
+
 <script>
+  const USER_ID = prompt("Enter your USER ID");
+  const RECEIVER_ID = prompt("Enter RECEIVER USER ID");
+
   const socket = io("http://localhost:3000");
 
-  const myId = "ALICE_ID";
-  const receiverId = "AMANY_ID";
-
-  socket.emit("join", myId);
-
-  socket.on("newMessage", msg => {
-    console.log("Received:", msg);
+  socket.on("connect", () => {
+    console.log("Connected:", socket.id);
+    socket.emit("join", USER_ID);
   });
 
-  setTimeout(() => {
+  socket.on("newMessage", (msg) => {
+    console.log("New message received:", msg);
+  });
+
+  function sendMessage() {
+    const text = prompt("Message to send:");
+
     socket.emit("sendMessage", {
-      sender: myId,
-      receiver: receiverId,
-      content: "Hello Amany"
+      sender: USER_ID,
+      receiver: RECEIVER_ID,
+      content: text
     });
-  }, 2000);
+  }
+
+  window.sendMessage = sendMessage;
 </script>
+
+<button onclick="sendMessage()">Send Message</button>
 </body>
 </html>

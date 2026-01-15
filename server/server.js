@@ -18,11 +18,11 @@ app.use(express.json())
 app.use("/api/auth", authRoutes)
 app.use("/api/chat", chatRoutes)
 
-socket(server)
-
 mongoose.connect(process.env.MONGO_URI)
     .then(() => console.log('MongoDB connected'))
     .catch(err => console.log(err))
+
+socket(server)
 
 server.listen(process.env.PORT, () => {
     console.log(`server running on port ${process.env.PORT}`);
