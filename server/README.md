@@ -147,3 +147,7 @@ Feel free to fork this project and customize it for your needs. If you have sugg
 ## Contact
 
 For questions or support, please open an issue in the repository.
+
+## Author
+Amany Elsayed  
+Junior MEAN Stack Developer
