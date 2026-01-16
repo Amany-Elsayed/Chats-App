@@ -1,9 +1,39 @@
 <div class="container-fluid">
-    <div class="col-3 border-end p-3">
-        <h5>Users</h5>
-    </div>
+    <div class="row vh-100">
 
-    <div class="col-9 p-3">
-        <h5>Chat</h5>
+        <div class="col-3 border-end p-3">
+            <h5>Users</h5>
+
+            @if (users.length === 0) {
+                <p class="text-muted">No users found</p>
+            }
+
+            <ul class="list-group mt-3">
+                @for (user of users; track user._id) {
+                    <li class="list-group-item" (click)="selectUser(user)" [class.active]="selectedUser?._id === user._id" style="cursor: pointer;">{{ user.username }}</li>
+                }
+            </ul>
+        </div>
+
+    <div class="col-9 d-flex flex-column">
+        <div class="flex-grow-1 -3 overflow-auto" #scrollContainer>
+            @if (!selectedUser) {
+                <p class="text-muted">Select a user to start chatting</p>
+            }
+
+            @for (msg of messages; track msg._id) {
+                <div class="mb-2" [class.text-end]="msg.sender !== selectedUser?._id">
+                    <span class="badge" [class.bg-primary]="msg.sender !== selectedUser?._id" [class.bg-secondary]="msg.sender === selectedUser?._id">{{ msg.content }}</span>
+                </div>
+            }
+        </div>
+
+        @if (selectedUser) {
+            <div class="p-3 border-top d-flex">
+               <input class="form-control me-2" [(ngModel)]="newMessage" placeholder="Type a messaage" (keyup.enter)="sendMessage()"/>
+               <button class="btn btn-primary" (click)="sendMessage()" [disabled]="!newMessage.trim()">Send</button> 
+            </div>
+        }
+    </div>
     </div>
 </div>

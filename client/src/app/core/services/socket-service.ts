@@ -7,25 +7,31 @@ import { Observable } from 'rxjs';
   providedIn: 'root',
 })
 export class SocketService {
-  private socket: Socket
+  private socket!: Socket
 
-  constructor() {
+  constructor() {}
+
+  connect(token: string): void {
     this.socket = io(environment.baseURL, {
-      auth: {
-        token: localStorage.getItem('token')
-      }
+      auth: { token }
     })
   }
 
-  listen(event: string): Observable<any> {
+  disconnect(): void {
+    if (this.socket) {
+      this.socket.disconnect()
+    }
+  }
+
+  sendMessage(receiverId: string, content: string): void {
+    this.socket.emit('sendMessage', { receiverId, content })
+  }
+
+  onMessage(): Observable<any> {
     return new Observable(observer => {
-      this.socket.on(event, data => observer.next(data))
-
-      return () => this.socket.off(event)
+      this.socket.on('receiveMessage', message => {
+        observer.next(message)
+      })
     })
-  }
-
-  emit(event: string, data: any): void {
-    this.socket.emit(event, data)
   }
 }

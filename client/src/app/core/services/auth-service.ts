@@ -2,10 +2,9 @@ import { Injectable } from '@angular/core';
 import { environment } from '../../../enviroments/enviroment';
 import { BehaviorSubject, Observable, tap } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
+import { AuthResponse } from '../interfaces/auth-response';
+import { SocketService } from './socket-service';
 
-interface AuthRespose { 
-  token: string
-}
 @Injectable({
   providedIn: 'root',
 })
@@ -16,13 +15,14 @@ export class AuthService {
 
   token$ = this.tokenSubject.asObservable()
 
-  constructor(private httpClient: HttpClient) {}
+  constructor(private httpClient: HttpClient, private socketService: SocketService) {}
 
-  login(email: string, password: string): Observable<AuthRespose> {
-    return this.httpClient.post<AuthRespose>(`${this.baseURL}/login`, {email, password})
+  login(email: string, password: string) {
+    return this.httpClient.post<AuthResponse>(`${this.baseURL}/login`, {email, password})
       .pipe(tap(res => {
         localStorage.setItem('token', res.token)
         this.tokenSubject.next(res.token)
+        this.socketService.connect(res.token)
       }))
   }
 
@@ -33,6 +33,7 @@ export class AuthService {
   logout(): void {
     localStorage.removeItem('token')
     this.tokenSubject.next(null)
+    this.socketService.disconnect()
   }
 
   getToken(): string | null {
