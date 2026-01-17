@@ -270,7 +270,7 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 5. Open a Pull Request
 
 
-## 👤 Author
+## Author
 
 Amany Elsayed - [GitHub](https://github.com/Amany-Elsayed)
 
