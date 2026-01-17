@@ -1,6 +1,7 @@
 const asyncHandler = require("express-async-handler")
 const User = require("../models/User")
 const Message = require("../models/Message")
+const ApiError = require("../utils/ApiError")
 
 const getUsers = asyncHandler(async (req, res) => {
     const users = await User.find({
@@ -23,4 +24,20 @@ const getMessages = asyncHandler(async (req, res) => {
     res.json(messages)
 })
 
-module.exports = { getUsers, getMessages }
+const sendMessage = asyncHandler(async (req, res) => {
+    const { receiverId, content } = req.body
+
+    if (!receiverId || !content) {
+        throw new ApiError('Missing receiverId or content', 400)
+    }
+
+    const message = await Message.create({
+        sender: req.userId,
+        receiver: receiverId,
+        content
+    })
+
+    res.status(201).json(message)
+})
+
+module.exports = { getUsers, getMessages, sendMessage }

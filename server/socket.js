@@ -1,29 +1,60 @@
+const jwt = require("jsonwebtoken");
 const Message = require("./models/Message");
 
-const socket = (server) => {
+const socketServer = (server) => {
   const io = require("socket.io")(server, {
-    cors: { origin: "*" }
-  })
+    cors: {
+      origin: "*",
+    },
+  });
 
   io.on("connection", (socket) => {
-    console.log("Socket connected:", socket.id)
+    try {
+      const token = socket.handshake.auth?.token;
+      if (!token) {
+        socket.disconnect();
+        return;
+      }
 
-    socket.on("join", (userId) => {
-      socket.join(userId)
-    })
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      const userId = decoded.id;
 
-    socket.on("sendMessage", async (msg) => {
-      console.log("Incoming message:", msg)
+      socket.userId = userId;
+      socket.join(userId);
 
-      const savedMessage = await Message.create({
-        sender: msg.sender,
-        receiver: msg.receiver,
-        content: msg.content
-      })
+      console.log("Socket connected:", userId);
 
-      io.to(msg.receiver).emit("newMessage", savedMessage)
-    })
-  })
-}
+      socket.on("sendMessage", async ({ receiverId, content }) => {
+        if (!receiverId || !content) return;
 
-module.exports = socket
+        const message = await Message.create({
+          sender: userId,
+          receiver: receiverId,
+          content,
+        });
+
+        const messageObj = {
+          _id: message._id.toString(),
+          sender: message.sender.toString(),
+          receiver: message.receiver.toString(),
+          content: message.content,
+          createdAt: message.createdAt
+        };
+
+        io.to(receiverId).emit("receiveMessage", messageObj);
+
+        io.to(userId).emit("receiveMessage", messageObj);
+      });
+
+      socket.on("disconnect", () => {
+        console.log("Socket disconnected:", userId);
+      });
+
+    } catch (err) {
+      console.error("Socket auth error:", err.message);
+      socket.disconnect();
+    }
+  });
+};
+
+module.exports = socketServer;

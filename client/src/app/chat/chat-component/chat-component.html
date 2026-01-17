@@ -22,8 +22,8 @@
             }
 
             @for (msg of messages; track msg._id) {
-                <div class="mb-2" [class.text-end]="msg.sender !== selectedUser?._id">
-                    <span class="badge" [class.bg-primary]="msg.sender !== selectedUser?._id" [class.bg-secondary]="msg.sender === selectedUser?._id">{{ msg.content }}</span>
+                <div class="mb-2" [class.text-end]="toString(msg.sender) === toString(currentUserId)">
+                    <span class="badge" [class.bg-primary]="toString(msg.sender) === toString(currentUserId)" [class.bg-secondary]="toString(msg.sender) !== toString(currentUserId)">{{ msg.content }}</span>
                 </div>
             }
         </div>
@@ -31,7 +31,7 @@
         @if (selectedUser) {
             <div class="p-3 border-top d-flex">
                <input class="form-control me-2" [(ngModel)]="newMessage" placeholder="Type a messaage" (keyup.enter)="sendMessage()"/>
-               <button class="btn btn-primary" (click)="sendMessage()" [disabled]="!newMessage.trim()">Send</button> 
+               <button class="btn btn-primary" (click)="sendMessage()" [disabled]="!newMessage || newMessage.trim().length === 0">Send</button> 
             </div>
         }
     </div>

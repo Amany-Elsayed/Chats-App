@@ -1,20 +1,49 @@
 import { Injectable } from '@angular/core';
 import { Socket, io } from 'socket.io-client';
 import { environment } from '../../../enviroments/enviroment';
-import { Observable } from 'rxjs';
+import { Observable, Subject } from 'rxjs';
 
 @Injectable({
   providedIn: 'root',
 })
 export class SocketService {
   private socket!: Socket
+  private messageSubject = new Subject<any>()
+  private messageHandler: ((message: any) => void) | null = null
 
   constructor() {}
 
   connect(token: string): void {
+    if (this.socket && this.socket.connected) {
+      if (!this.messageHandler) {
+        this.setupMessageListener()
+      }
+      return
+    }
+    
+    if (this.socket) {
+      if (this.messageHandler) {
+        this.socket.off('receiveMessage', this.messageHandler)
+      }
+      this.socket.disconnect()
+      this.messageHandler = null
+    }
+    
     this.socket = io(environment.baseURL, {
       auth: { token }
     })
+
+    this.setupMessageListener()
+  }
+
+  private setupMessageListener(): void {
+    if (!this.socket || this.messageHandler) return
+    
+    this.messageHandler = (message: any) => {
+      this.messageSubject.next(message)
+    }
+    
+    this.socket.on('receiveMessage', this.messageHandler)
   }
 
   disconnect(): void {
@@ -28,10 +57,6 @@ export class SocketService {
   }
 
   onMessage(): Observable<any> {
-    return new Observable(observer => {
-      this.socket.on('receiveMessage', message => {
-        observer.next(message)
-      })
-    })
+    return this.messageSubject.asObservable()
   }
 }
