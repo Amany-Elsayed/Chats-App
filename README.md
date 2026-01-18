@@ -76,11 +76,6 @@ Before you begin, ensure you have the following installed:
    JWT_SECRET=your-secret-jwt-key-change-this-in-production
    ```
 
-   **For MongoDB Atlas:**
-   ```env
-   MONGO_URI=mongodb+srv://username:password@cluster.mongodb.net/chat-app
-   ```
-
 ### Client Configuration
 
 The client environment files are located in `client/src/enviroments/`:
