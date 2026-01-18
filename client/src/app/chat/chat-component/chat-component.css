@@ -1,0 +1,16 @@
+.tick {
+    font-size: 0.8rem;
+    letter-spacing: -2px;
+}
+
+.tick-sent {
+    color: gray;
+}
+
+.tick-delivered {
+    color: gray;
+}
+
+.tick-read {
+    color: #0d6efd;
+}

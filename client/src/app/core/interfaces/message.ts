@@ -4,4 +4,6 @@ export interface Message {
   receiver: string;
   content: string;
   createdAt: string;
+  delivered: boolean;
+  read: boolean;
 }

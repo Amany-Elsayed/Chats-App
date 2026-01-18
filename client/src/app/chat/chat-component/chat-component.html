@@ -10,7 +10,17 @@
 
             <ul class="list-group mt-3">
                 @for (user of users; track user._id) {
-                    <li class="list-group-item" (click)="selectUser(user)" [class.active]="selectedUser?._id === user._id" style="cursor: pointer;">{{ user.username }}</li>
+                    <li 
+                    class="list-group-item d-flex justify-content-between align-items-center"
+                    (click)="selectUser(user)" 
+                    [class.active]="selectedUser?._id === user._id"
+                    style="cursor: pointer;"> {{ user.username }} 
+                        <span
+                        class="rounded-circle" 
+                        [class.bg-success]="user.online"
+                        [class.bg-secondary]="!user.online"
+                        style="width: 10px; height: 10px; display: inline-block;"></span>
+                    </li>
                 }
             </ul>
         </div>
@@ -22,15 +32,54 @@
             }
 
             @for (msg of messages; track msg._id) {
-                <div class="mb-2" [class.text-end]="toString(msg.sender) === toString(currentUserId)">
-                    <span class="badge" [class.bg-primary]="toString(msg.sender) === toString(currentUserId)" [class.bg-secondary]="toString(msg.sender) !== toString(currentUserId)">{{ msg.content }}</span>
-                </div>
+                <div 
+                class="mb-2 d-flex"
+                [class.justify-content-end]="toString(msg.sender) === toString(currentUserId)"
+                [class.justify-content-start]="toString(msg.sender) !== toString(currentUserId)"
+                >
+                    <div
+                    class="p-2 rounded"
+                    [class.bg-primary]="toString(msg.sender) === toString(currentUserId)"
+                    [class.bg-secondary]="toString(msg.sender) !== toString(currentUserId)"
+                    style="max-width: 70%;"
+                    >
+                        <div class="text-white">
+                            {{ msg.content }}
+                        </div>
+
+                        <div class="text-end text-light small mt-1" style="opacity: 0.8;">
+                            {{ formatTime(msg.createdAt) }}
+                        </div>
+
+                        @if (toString(msg.sender) === toString(currentUserId)) {
+                            <div class="text-end small mt-1">
+                                @if (!msg.delivered) {
+                                    <span class="tick-sent">✔</span>
+                                } @else if (msg.delivered && !msg.read) {
+                                    <span class="tick-delivered">✔✔</span>
+                                } @else if (msg.read) {
+                                    <span class="tick-read">✔✔</span>
+                                }
+                            </div>
+                        }
+                    </div>
+                </div>  
             }
         </div>
 
         @if (selectedUser) {
             <div class="p-3 border-top d-flex">
-               <input class="form-control me-2" [(ngModel)]="newMessage" placeholder="Type a messaage" (keyup.enter)="sendMessage()"/>
+                @if (isSelectedUserTyping()) {
+                <div class="text-muted small px-3 pb-1">
+                    {{ selectedUser.username }} is typing...
+                </div>
+                }
+                <input
+                class="form-control me-2"
+                [(ngModel)]="newMessage"
+                placeholder="Type a message"
+                (input)="onTypingInput()"
+                (keyup.enter)="sendMessage()"/>
                <button class="btn btn-primary" (click)="sendMessage()" [disabled]="!newMessage || newMessage.trim().length === 0">Send</button> 
             </div>
         }

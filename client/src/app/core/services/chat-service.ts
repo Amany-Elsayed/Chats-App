@@ -25,4 +25,8 @@ export class ChatService {
   sendMessage(receiverId: string, content: string): Observable<Message> {
     return this.httpClient.post<Message>(`${this.baseURL}/message`, { receiverId, content })
   }
+
+  markAsRead(userId: string): Observable<void> {
+    return this.httpClient.put<void>(`${this.baseURL}/read/${userId}`, {})
+  }
 }

@@ -40,4 +40,15 @@ const sendMessage = asyncHandler(async (req, res) => {
     res.status(201).json(message)
 })
 
-module.exports = { getUsers, getMessages, sendMessage }
+const markAsRead = asyncHandler(async (req, res) => {
+    const { userId } = req.params
+
+    await Message.updateMany(
+        { sender: userId, receiver: req.userId, read: false },
+        { read: true }
+    )
+
+    res.sendStatus(200)
+})
+
+module.exports = { getUsers, getMessages, sendMessage, markAsRead }
