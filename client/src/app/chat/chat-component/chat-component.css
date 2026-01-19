@@ -1,16 +1,40 @@
-.tick {
-    font-size: 0.8rem;
-    letter-spacing: -2px;
+.message-status {
+  display: flex;
+  justify-content: flex-end;
+  gap: 4px;
+  opacity: 0.9;
 }
 
-.tick-sent {
-    color: gray;
+.dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  display: inline-block;
 }
 
-.tick-delivered {
-    color: gray;
+.dot.sent {
+  background-color: #adb5bd;
 }
 
-.tick-read {
-    color: #0d6efd;
+.dot.delivered {
+  background-color: #adb5bd;
+}
+
+.dot.read {
+  background-color: #2bff3c;
+}
+
+.dot.read {
+  animation: pop 0.2s ease-in;
+}
+
+@keyframes pop {
+  from {
+    transform: scale(0.6);
+    opacity: 0.5;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
 }

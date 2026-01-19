@@ -20,9 +20,11 @@ export class ChatComponent implements OnInit, OnDestroy{
   messages: Message[] = []
   newMessage = ''
   currentUserId: string | null = null
+
   typingUsers = new Set<string>()
   typingTimeout: any
-  private socketSub?: Subscription
+
+  private subs: Subscription[] = []
 
   @ViewChild('scrollContainer')
   scrollContainer!: ElementRef<HTMLDivElement>;
@@ -34,126 +36,120 @@ export class ChatComponent implements OnInit, OnDestroy{
     this.currentUserId = this.authService.getUserId()
     this.loadUsers()
 
-    this.socketService.onOnlineUsers().subscribe(ids => {
-      this.users.forEach(user => {
-        user.online = ids.includes(user._id)
-      })
-    })
+    this.subs.push(
+      this.socketService.onOnlineUsers().subscribe(ids => {
+        this.users.forEach(u => (u.online = ids.includes(u._id)))
+      }),
 
-    this.socketService.onUserStatus().subscribe(({userId, online}) => {
-      const user = this.users.find(u => u._id === userId)
-      if (user) {
-        user.online = online
-      }
-    })
+      this.socketService.onUserStatus().subscribe(({userId, online}) => {
+        const user = this.users.find(u => u._id === userId)
+        if (user) {
+          user.online = online
+        }
+      }),
 
-    this.socketService.onTyping().subscribe(userId => {
-      if (this.selectedUser && userId === this.selectedUser._id) {
-        this.typingUsers.add(userId)     
-      }
-    })
+      this.socketService.onTyping().subscribe(userId => {
+        if (this.selectedUser?._id === userId) {
+          this.typingUsers.add(userId)     
+        }
+      }),
 
-    this.socketService.onStopTyping().subscribe(userId => {
-      if (this.selectedUser && userId === this.selectedUser._id) {
+      this.socketService.onStopTyping().subscribe(userId => {
         this.typingUsers.delete(userId)
-      }
-    })
+      }),
 
-    this.socketService.onMessageStatusUpdate().subscribe(({ messageId, delivered }) => {
-      const msg = this.messages.find(m => m._id === messageId)
-      if (msg) {
-        msg.delivered = delivered
-      }
-    })
+      this.socketService.onMessageStatusUpdate().subscribe(({ messageId, delivered }) => {
+        const msg = this.messages.find(m => m._id === messageId)
+        if (msg) {
+          msg.delivered = delivered
+        }
+      }),
 
-    this.socketService.onMessageRead().subscribe(({ readerId }) => {
-      this.messages.forEach(msg => {
-        if (
-          String(msg.sender) === String(this.currentUserId) &&
-          String(msg.receiver) === String(readerId)
-        ) {
+      this.socketService.onMessageReadUpdate().subscribe(({ messageId }) => {
+        const msg = this.messages.find(m => m._id === messageId)
+        if (msg) {
           msg.read = true
           msg.delivered = true
         }
-      })
-    })
+      }),
 
-    this.socketSub = this.socketService.onMessage().subscribe((msg: Message) => {
-      if (!this.selectedUser || !this.currentUserId) return
-
-      const sender = String(msg.sender)
-      const receiver = String(msg.receiver)
-      const selectedUserId = String(this.selectedUser._id)
-      const currentUserId = String(this.currentUserId)
-
-      const isRelevant = 
-      (sender === selectedUserId && receiver === currentUserId) ||
-      (sender === currentUserId && receiver === selectedUserId)
-
-      if (!isRelevant) return
-
-      if (this.messages.some(m => String(m._id) === String(msg._id))) return
-
-      this.messages.push(msg)
-      this.scrollToBottom()
-
-      if (msg.sender !== currentUserId) {
-        this.socketService.sendDelivered(msg._id)
-      }
-    })
+      this.socketService.onMessage().subscribe(msg => this.handleIncomingMessage(msg))
+    )
   }
 
   ngOnDestroy(): void {
-    this.socketSub?.unsubscribe()
+    this.subs.forEach(s => s.unsubscribe())
+  }
+
+  private handleIncomingMessage(msg: Message) {
+    if (!this.selectedUser || !this.currentUserId) return
+
+    const sender = String(msg.sender)
+    const receiver = String(msg.receiver)
+
+    const isRelevant = 
+      (sender === this.selectedUser._id && receiver === this.currentUserId) ||
+      (sender === this.currentUserId && receiver === this.selectedUser._id)
+
+    if (!isRelevant) return
+    if (this.messages.some(m => m._id === msg._id)) return
+
+    this.messages.push(msg)
+    this.scrollToBottom()
+
+    if (sender !== this.currentUserId) {
+      this.socketService.sendDelivered(msg._id)
+
+      if (this.selectedUser && sender === String(this.selectedUser._id)) {
+        this.socketService.emitMessageRead([msg._id])
+      }
+    }
   }
 
   loadUsers(): void {
-    this.chatService.getUsers().subscribe({
-      next: users => this.users = users,
-      error: () => alert('Failed to load users')
-    })
+    this.chatService.getUsers().subscribe(users => (this.users = users))
   }
 
   selectUser(user: User): void {
     this.selectedUser = user
+    this.typingUsers.clear()
     this.messages = []
     this.loadMessages()
-
-    this.socketService.emitMessageRead(user._id)
-    this.chatService.markAsRead(user._id).subscribe()
   }
 
   loadMessages(): void {
     if (!this.selectedUser) return
 
-    this.chatService.getMessages(this.selectedUser._id).subscribe({
-      next: msgs => {
-        this.messages = msgs
-      },
-      error: () => alert('Failed to load messages')
+    this.chatService.getMessages(this.selectedUser._id).subscribe(msgs => {
+      this.messages = msgs
+
+      const unreadIds = msgs
+        .filter(m => !m.read && String(m.receiver) === String(this.currentUserId))
+        .map(m => m._id)
+
+      if (unreadIds.length) {
+        this.socketService.emitMessageRead(unreadIds)
+        this.chatService.markAsRead(this.selectedUser!._id).subscribe()
+      }
     })
   }
 
   sendMessage(): void {
     if (!this.newMessage.trim() || !this.selectedUser) return
-    this.socketService.emitStopTyping(this.selectedUser._id)
 
     const content = this.newMessage
     this.newMessage = ''
 
+    this.socketService.emitStopTyping(this.selectedUser._id)
     this.socketService.sendMessage(this.selectedUser._id, content)
-
-    this.chatService.sendMessage(this.selectedUser._id, content).subscribe({
-      error: () => alert('Failed to send message')
-    })
   }
 
   onTypingInput(): void {
     if (!this.selectedUser) return
 
     this.socketService.emitTyping(this.selectedUser._id)
-
     clearTimeout(this.typingTimeout)
+
     this.typingTimeout = setTimeout(() => {
       this.socketService.emitStopTyping(this.selectedUser!._id)
     }, 800)
@@ -174,7 +170,6 @@ export class ChatComponent implements OnInit, OnDestroy{
 
   scrollToBottom(): void {
     setTimeout(() => {
-      if (!this.scrollContainer) return
       this.scrollContainer.nativeElement.scrollTop =
         this.scrollContainer.nativeElement.scrollHeight
     })

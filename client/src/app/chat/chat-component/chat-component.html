@@ -52,13 +52,15 @@
                         </div>
 
                         @if (toString(msg.sender) === toString(currentUserId)) {
-                            <div class="text-end small mt-1">
+                            <div class="text-end small mt-1 message-status">
                                 @if (!msg.delivered) {
-                                    <span class="tick-sent">✔</span>
+                                <span class="dot sent"></span>
                                 } @else if (msg.delivered && !msg.read) {
-                                    <span class="tick-delivered">✔✔</span>
+                                <span class="dot delivered"></span>
+                                <span class="dot delivered"></span>
                                 } @else if (msg.read) {
-                                    <span class="tick-read">✔✔</span>
+                                <span class="dot read"></span>
+                                <span class="dot read"></span>
                                 }
                             </div>
                         }
