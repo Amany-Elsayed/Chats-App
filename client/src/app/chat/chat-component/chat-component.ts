@@ -100,8 +100,10 @@ export class ChatComponent implements OnInit, OnDestroy{
     if (sender !== this.currentUserId) {
       this.socketService.sendDelivered(msg._id)
 
-      if (this.selectedUser && sender === String(this.selectedUser._id)) {
-        this.socketService.emitMessageRead([msg._id])
+      if (this.selectedUser?._id === sender) {
+        setTimeout(() => {
+          this.socketService.emitMessageRead([msg._id])
+        }, 0)
       }
     }
   }
@@ -115,6 +117,16 @@ export class ChatComponent implements OnInit, OnDestroy{
     this.typingUsers.clear()
     this.messages = []
     this.loadMessages()
+
+    setTimeout(() => {
+      const unreadIds = this.messages
+        .filter(m => !m.read && String(m.receiver) === String(this.currentUserId))
+        .map(m => m._id)
+
+      if (unreadIds.length) {
+        this.socketService.emitMessageRead(unreadIds)
+      }
+    }, 0)
   }
 
   loadMessages(): void {

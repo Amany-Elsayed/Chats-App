@@ -42,10 +42,14 @@ const socketServer = (server) => {
       socket.on("sendMessage", async ({ receiverId, content }) => {
         if (!receiverId || !content) return
 
+        const isReceiverOnline = onlineUsers.has(receiverId)
+
         const message = await Message.create({
           sender: userId,
           receiver: receiverId,
-          content
+          content,
+          delivered: isReceiverOnline,
+          read: false
         });
 
         const messageObj = {
@@ -53,13 +57,20 @@ const socketServer = (server) => {
           sender: message.sender.toString(),
           receiver: message.receiver.toString(),
           content: message.content,
-          delivered: false,
+          delivered: isReceiverOnline,
           read: false,
           createdAt: message.createdAt
         };
 
         io.to(receiverId).emit("receiveMessage", messageObj);
         io.to(userId).emit("receiveMessage", messageObj);
+
+        if (isReceiverOnline) {
+          io.to(userId).emit('messageStatusUpdate', {
+            messageId: message._id.toString(),
+            delivered: true
+          })
+        }
       });
 
       socket.on('messageDelivered', async ({ messageId }) => {
@@ -90,10 +101,10 @@ const socketServer = (server) => {
           { read: true, delivered: true, readAt: new Date() }
         )
 
-        messageIds.forEach(msg => {
-          if (!msg.sender) return
-
-          io.to(msg.sender.toString()).emit('messageReadUpdate', { messageId: String(msg._id) })
+        messages.forEach(msg => {
+          io.to(msg.sender.toString()).emit('messageReadUpdate', {
+            messageId: msg._id.toString()
+          })
         })
       })
 
