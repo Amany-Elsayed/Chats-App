@@ -17,9 +17,12 @@ import { Subscription } from 'rxjs';
 export class ChatComponent implements OnInit, OnDestroy{
   users: User[] = []
   selectedUser: User | null = null
-  messages: Message[] = []
+  messages: (Message & { senderId?: string; receiverId?: string })[] = []
   newMessage = ''
   currentUserId: string | null = null
+
+  isUserNearBottom = true
+  showNewMessageBtn = false
 
   typingUsers = new Set<string>()
   typingTimeout: any
@@ -81,28 +84,39 @@ export class ChatComponent implements OnInit, OnDestroy{
     this.subs.forEach(s => s.unsubscribe())
   }
 
+  private normalizeMessage(msg: Message) {
+    return {
+      ...msg,
+      senderId: String(msg.sender),
+      receiverId: String(msg.receiver)
+    }
+  }
+
   private handleIncomingMessage(msg: Message) {
     if (!this.selectedUser || !this.currentUserId) return
 
-    const sender = String(msg.sender)
-    const receiver = String(msg.receiver)
+    const normalized = this.normalizeMessage(msg)
 
     const isRelevant = 
-      (sender === this.selectedUser._id && receiver === this.currentUserId) ||
-      (sender === this.currentUserId && receiver === this.selectedUser._id)
+      (normalized.senderId === this.selectedUser._id && normalized.receiverId === this.currentUserId) ||
+      (normalized.senderId === this.currentUserId && normalized.receiverId === this.selectedUser._id)
 
     if (!isRelevant) return
-    if (this.messages.some(m => m._id === msg._id)) return
+    if (this.messages.some(m => m._id === normalized._id)) return
 
-    this.messages.push(msg)
-    this.scrollToBottom()
+    this.messages.push(normalized)
+    if (this.isUserNearBottom) {
+      this.scrollToBottom(true)
+    } else {
+      this.showNewMessageBtn = true
+    }
 
-    if (sender !== this.currentUserId) {
-      this.socketService.sendDelivered(msg._id)
+    if (normalized.senderId !== this.currentUserId) {
+      this.socketService.sendDelivered(normalized._id)
 
-      if (this.selectedUser?._id === sender) {
+      if (this.selectedUser?._id === normalized.senderId) {
         setTimeout(() => {
-          this.socketService.emitMessageRead([msg._id])
+          this.socketService.emitMessageRead([normalized._id])
         }, 0)
       }
     }
@@ -117,32 +131,24 @@ export class ChatComponent implements OnInit, OnDestroy{
     this.typingUsers.clear()
     this.messages = []
     this.loadMessages()
-
-    setTimeout(() => {
-      const unreadIds = this.messages
-        .filter(m => !m.read && String(m.receiver) === String(this.currentUserId))
-        .map(m => m._id)
-
-      if (unreadIds.length) {
-        this.socketService.emitMessageRead(unreadIds)
-      }
-    }, 0)
   }
 
   loadMessages(): void {
-    if (!this.selectedUser) return
+    if (!this.selectedUser || !this.currentUserId) return
 
     this.chatService.getMessages(this.selectedUser._id).subscribe(msgs => {
-      this.messages = msgs
+      this.messages = msgs.map(m => this.normalizeMessage(m))
 
-      const unreadIds = msgs
-        .filter(m => !m.read && String(m.receiver) === String(this.currentUserId))
+      const unreadIds = this.messages
+        .filter(m => !m.read && m.receiverId === this.currentUserId)
         .map(m => m._id)
 
       if (unreadIds.length) {
         this.socketService.emitMessageRead(unreadIds)
         this.chatService.markAsRead(this.selectedUser!._id).subscribe()
       }
+
+      this.scrollToBottom(true)
     })
   }
 
@@ -180,14 +186,34 @@ export class ChatComponent implements OnInit, OnDestroy{
     })
   }
 
-  scrollToBottom(): void {
+  scrollToBottom(force: boolean = false): void {
     setTimeout(() => {
-      this.scrollContainer.nativeElement.scrollTop =
-        this.scrollContainer.nativeElement.scrollHeight
+      if (!this.scrollContainer) return
+
+      const el = this.scrollContainer.nativeElement
+
+      if (force || this.isUserNearBottom) {
+        el.scrollTop = el.scrollHeight
+        this.showNewMessageBtn = false
+        this.isUserNearBottom = true
+      }
     })
   }
 
-  toString(value: any): string {
-    return String(value)
+  onScroll() {
+    if (!this.scrollContainer) return
+
+    const el = this.scrollContainer.nativeElement
+    const threshold = 150
+
+    this.isUserNearBottom = 
+      el.scrollHeight - (el.scrollTop + el.clientHeight) < threshold
+
+    this.showNewMessageBtn = !this.isUserNearBottom
   }
+
+  trackByMessageId(index: number, msg: Message) {
+    return msg._id
+  }
+
 }

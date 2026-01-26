@@ -28,6 +28,26 @@
   animation: pop 0.2s ease-in;
 }
 
+.new-msg-btn {
+  position: absolute;
+  bottom: 15px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+}
+
+.message-me {
+  border-radius: 15px 15px 0 15px;
+}
+
+.message-other {
+  border-radius: 15px 15px 15px 0;
+}
+
+.messsage {
+  animation: fadeIn 0.2s ease-in;
+}
+
 @keyframes pop {
   from {
     transform: scale(0.6);
@@ -37,4 +57,9 @@
     transform: scale(1);
     opacity: 1;
   }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0);}
 }
