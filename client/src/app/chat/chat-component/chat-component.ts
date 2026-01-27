@@ -204,6 +204,13 @@ export class ChatComponent implements OnInit, OnDestroy{
     if (!this.scrollContainer) return
 
     const el = this.scrollContainer.nativeElement
+
+    console.log({
+      scrollTop: el.scrollTop,
+      scrollHeight: el.scrollHeight,
+      clientHeight: el.clientHeight
+    });
+    
     const threshold = 150
 
     this.isUserNearBottom = 

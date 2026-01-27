@@ -5,6 +5,20 @@
   opacity: 0.9;
 }
 
+.chat-body {
+  position: relative;
+  height: 500px;
+  border: 2px solid grey;
+  display: flex;
+  flex-direction: column;
+}
+
+.chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1rem;
+}
+
 .dot {
   width: 6px;
   height: 6px;
@@ -33,7 +47,7 @@
   bottom: 15px;
   left: 50%;
   transform: translateX(-50%);
-  z-index: 1000;
+  z-index: 20;
 }
 
 .message-me {

@@ -33,7 +33,13 @@
     <div class="col-9 d-flex flex-column">
 
       <!-- MESSAGES -->
-      <div class="flex-grow-1 overflow-auto p-3 position-relative" #scrollContainer (scroll)="onScroll()">
+      <div class="chat-body">
+
+        <div
+        class="chat-messages"
+        #scrollContainer
+        (scroll)="onScroll()"
+        >
 
         @if (!selectedUser) {
           <p class="text-muted">Select a user to start chatting</p>
@@ -77,8 +83,12 @@
           </div>
         }
 
+        </div>
+
         @if (showNewMessageBtn) {
-          <button class="btn btn-sm btn-secondary new-msg-btn" (click)="scrollToBottom(true)">
+          <button
+            class="btn btn-sm btn-secondary new-msg-btn"
+            (click)="scrollToBottom(true)">
             New messages ↓
           </button>
         }
@@ -87,7 +97,7 @@
 
       <!-- INPUT -->
       @if (selectedUser) {
-        <div class="p-3 border-top">
+        <div class="p-3 border-top chat-input">
 
           @if (isSelectedUserTyping()) {
             <div class="text-muted small mb-1">
