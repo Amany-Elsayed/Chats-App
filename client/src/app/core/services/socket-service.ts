@@ -81,4 +81,20 @@ export class SocketService {
     return this.stopTypingSubject.asObservable()
   }
 
+  editMessage(messageId: string, content: string) {
+    this.socket.emit('editMessage', { messageId, content })
+  }
+
+  deleteMessage(messageId: string) {
+    this.socket.emit("deleteMessage", { messageId })
+  }
+
+  onMessageEdited() {
+    return fromEvent<{ messageId: string; content: string; }>(this.socket, "messageEdited")
+  }
+
+  onMessageDeleted() {
+    return fromEvent<{ messageId: string }>(this.socket, "messageDeleted")
+  }
+
 }

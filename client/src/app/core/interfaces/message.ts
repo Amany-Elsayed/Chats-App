@@ -6,4 +6,6 @@ export interface Message {
   createdAt: string;
   delivered: boolean;
   read: boolean;
+  isEdited: boolean;
+  deleted: boolean;
 }

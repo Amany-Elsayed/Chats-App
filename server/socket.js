@@ -73,6 +73,36 @@ const socketServer = (server) => {
         }
       });
 
+      socket.on("editMessage", async ({ messageId, content }) => {
+        const msg = await Message.findById(messageId)
+        if (!msg) return
+        if (msg.sender.toString() !== userId) return
+
+        msg.content = content
+        msg.isEdited = true
+        await msg.save()
+
+        const payload = {
+          messageId,
+          content,
+          isEdited: true
+        }
+
+        io.to(msg.sender.toString()).emit("messageEdited", payload)
+        io.to(msg.receiver.toString()).emit("messageEdited", payload)
+      })
+
+      socket.on("deleteMessage", async ({ messageId }) => {
+        const msg = await Message.findById(messageId)
+        if (!msg) return
+        if (msg.sender.toString() !== userId) return
+
+        await msg.deleteOne()
+
+        io.to(msg.sender.toString()).emit("messageDeleted", { messageId })
+        io.to(msg.receiver.toString()).emit("messageDeleted", { messageId })
+      })
+
       socket.on('messageDelivered', async ({ messageId }) => {
         const msg = await Message.findByIdAndUpdate(
           messageId,

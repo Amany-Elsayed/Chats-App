@@ -26,6 +26,14 @@ const MessageSchema = new mongoose.Schema({
     readAt: {
         type: Date,
         default: null
+    },
+    isEdited: {
+        type: Boolean,
+        default: false
+    },
+    deleted: {
+        type: Boolean,
+        default: false
     }
 }, { timestamps: true })
 

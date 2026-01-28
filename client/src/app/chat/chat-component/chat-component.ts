@@ -20,6 +20,10 @@ export class ChatComponent implements OnInit, OnDestroy{
   messages: (Message & { senderId?: string; receiverId?: string })[] = []
   newMessage = ''
   currentUserId: string | null = null
+  
+  editingMessageId: string | null = null
+  editedContent = ''
+  openMenuId: string | null = null
 
   isUserNearBottom = true
   showNewMessageBtn = false
@@ -74,6 +78,18 @@ export class ChatComponent implements OnInit, OnDestroy{
           msg.read = true
           msg.delivered = true
         }
+      }),
+
+      this.socketService.onMessageEdited().subscribe(({ messageId, content }) => {
+        const msg = this.messages.find(m => m._id === messageId)
+        if (msg) {
+          msg.content = content
+          msg.isEdited = true
+        }
+      }),
+
+      this.socketService.onMessageDeleted().subscribe(({ messageId }) => {
+        this.messages = this.messages.filter(m => m._id !== messageId)
       }),
 
       this.socketService.onMessage().subscribe(msg => this.handleIncomingMessage(msg))
@@ -221,6 +237,33 @@ export class ChatComponent implements OnInit, OnDestroy{
 
   trackByMessageId(index: number, msg: Message) {
     return msg._id
+  }
+
+  startEdit(msg: Message) {
+    this.editingMessageId = msg._id
+    this.editedContent = msg.content
+    this.openMenuId = null
+  }
+
+  saveEdit(msg: Message) {
+    this.socketService.editMessage(msg._id, this.editedContent)
+    this.editingMessageId = null
+  }
+
+  deleteMsg(msg: Message) {
+    this.openMenuId = null
+    if (confirm("Delete this Message?")) {
+      this.socketService.deleteMessage(msg._id)
+    }
+  }
+
+  cancelEdit(): void {
+    this.editingMessageId = null
+    this.editedContent = ''
+  }
+
+  toggleMenu(id: string) {
+    this.openMenuId = this.openMenuId === id ? null : id
   }
 
 }

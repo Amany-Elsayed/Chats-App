@@ -51,4 +51,35 @@ const markAsRead = asyncHandler(async (req, res) => {
     res.sendStatus(200)
 })
 
-module.exports = { getUsers, getMessages, sendMessage, markAsRead }
+const editMessage = asyncHandler(async (req, res) => {
+    const { messageId } = req.params
+    const { content } = req.body
+
+    const msg = await Message.findById(messageId)
+
+    if (!msg) throw new ApiError('message not found', 404)
+    if (msg.sender.toString() !== req.userId)
+        throw new ApiError('not authorized', 403)
+
+    msg.content = content
+    msg.isEdited = true
+    await msg.save()
+
+    res.json(msg)
+})
+
+const deleteMessage = asyncHandler(async (req, res) => {
+    const { messageId } = req.params
+    
+    const msg = await Message.findById(messageId)
+
+    if (!msg) throw new ApiError('message not found', 404)
+    if (msg.sender.toString() !== req.userId)
+        throw new ApiError('not authorized', 403)
+
+    await msg.deleteOne()
+
+    res.sendStatus(200)
+})
+
+module.exports = { getUsers, getMessages, sendMessage, markAsRead, editMessage, deleteMessage }

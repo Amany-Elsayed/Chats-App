@@ -36,59 +36,123 @@
       <div class="chat-body">
 
         <div
-        class="chat-messages"
-        #scrollContainer
-        (scroll)="onScroll()"
+          class="chat-messages"
+          #scrollContainer
+          (scroll)="onScroll()"
         >
 
-        @if (!selectedUser) {
-          <p class="text-muted">Select a user to start chatting</p>
-        }
+          @if (!selectedUser) {
+            <p class="text-muted">Select a user to start chatting</p>
+          }
 
-        @for (msg of messages; track msg._id) {
-          <div
-            class="mb-2 d-flex"
-            [class.justify-content-end]="msg.senderId === currentUserId"
-            [class.justify-content-start]="msg.senderId !== currentUserId"
-          >
+          @for (msg of messages; track msg._id) {
             <div
-              class="p-2"
-              [ngClass]="{
-                'bg-primary message-me': msg.senderId === currentUserId,
-                'bg-secondary message-other': msg.senderId !== currentUserId
-              }"
+              class="d-flex mb-2"
+              [class.justify-content-end]="msg.senderId === currentUserId"
+              [class.justify-content-start]="msg.senderId !== currentUserId"
             >
-              <div class="text-white">
-                {{ msg.content }}
-              </div>
 
-              <div class="text-end text-light small mt-1" style="opacity: 0.8;">
-                {{ formatTime(msg.createdAt) }}
-              </div>
+              <div
+                class="message-bubble position-relative p-2 rounded shadow-sm"
+                [ngClass]="{
+                  'bg-primary text-white': msg.senderId === currentUserId,
+                  'bg-light text-dark': msg.senderId !== currentUserId
+                }"
+              >
 
-              @if (msg.senderId === currentUserId) {
-                <div class="text-end small mt-1 message-status">
-                  @if (!msg.delivered) {
-                    <span class="dot sent"></span>
-                  } @else if (msg.delivered && !msg.read) {
-                    <span class="dot delivered"></span>
-                    <span class="dot delivered"></span>
-                  } @else if (msg.read) {
-                    <span class="dot read"></span>
-                    <span class="dot read"></span>
+                <!-- MESSAGE ACTIONS -->
+                @if (msg.senderId === currentUserId) {
+                  <div class="message-actions">
+                    <button
+                      type="button"
+                      class="btn btn-sm btn-light"
+                      (click)="toggleMenu(msg._id)"
+                    >
+                      ⋮
+                    </button>
+
+                    @if (openMenuId === msg._id) {
+                      <div class="message-menu">
+                        <button
+                          class="dropdown-item"
+                          (click)="startEdit(msg)"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          class="dropdown-item text-danger"
+                          (click)="deleteMsg(msg)"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    }
+                  </div>
+                }
+
+                <!-- EDIT MODE -->
+                @if (editingMessageId === msg._id) {
+                  <input
+                    class="form-control form-control-sm mb-1"
+                    [(ngModel)]="editedContent"
+                  />
+                  <div class="text-end">
+                    <button
+                      class="btn btn-sm btn-success me-1"
+                      (click)="saveEdit(msg)"
+                    >
+                      Save
+                    </button>
+                    <button
+                      class="btn btn-sm btn-secondary"
+                      (click)="cancelEdit()"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                }
+                @else {
+                  <div>{{ msg.content }}</div>
+
+                  @if (msg.isEdited) {
+                    <small class="text-white">(edited)</small>
                   }
+                }
+
+                <!-- TIME -->
+                <div class="text-end small opacity-75 mt-1">
+                  {{ formatTime(msg.createdAt) }}
                 </div>
-              }
+
+                <!-- STATUS DOTS -->
+                @if (msg.senderId === currentUserId) {
+                  <div class="text-end small mt-1">
+                    @if (!msg.delivered) {
+                      <span class="dot sent"></span>
+                    }
+                    @else if (msg.delivered && !msg.read) {
+                      <span class="dot delivered"></span>
+                      <span class="dot delivered"></span>
+                    }
+                    @else if (msg.read) {
+                      <span class="dot read"></span>
+                      <span class="dot read"></span>
+                    }
+                  </div>
+                }
+
+              </div>
             </div>
-          </div>
-        }
+          }
 
         </div>
 
+        <!-- NEW MESSAGE BUTTON -->
         @if (showNewMessageBtn) {
           <button
             class="btn btn-sm btn-secondary new-msg-btn"
-            (click)="scrollToBottom(true)">
+            (click)="scrollToBottom(true)"
+          >
             New messages ↓
           </button>
         }
@@ -113,6 +177,7 @@
               (input)="onTypingInput()"
               (keyup.enter)="sendMessage()"
             />
+
             <button
               class="btn btn-primary"
               (click)="sendMessage()"
