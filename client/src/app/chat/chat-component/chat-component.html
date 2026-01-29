@@ -74,7 +74,7 @@
                     @if (openMenuId === msg._id) {
                       <div class="message-menu">
                         <button
-                          class="dropdown-item"
+                          class="dropdown-item text-edit"
                           (click)="startEdit(msg)"
                         >
                           Edit
@@ -113,10 +113,6 @@
                 }
                 @else {
                   <div>{{ msg.content }}</div>
-
-                  @if (msg.isEdited) {
-                    <small class="text-white">(edited)</small>
-                  }
                 }
 
                 <!-- TIME -->
@@ -126,7 +122,12 @@
 
                 <!-- STATUS DOTS -->
                 @if (msg.senderId === currentUserId) {
+
                   <div class="text-end small mt-1">
+                    @if (msg.isEdited) {
+                      <small class="edited-label">edited</small>
+                    }
+                    
                     @if (!msg.delivered) {
                       <span class="dot sent"></span>
                     }
