@@ -6,13 +6,6 @@
   opacity: 0.8;
 }
 
-.edited-label {
-  font-size: 10px;
-  line-height: 1;
-  color: rgba(255, 255, 255, 0.7);
-  margin-right: 2px;
-}
-
 .bg-light .edited-label {
   color: rgba(0, 0, 0, 0.5);
 }
@@ -104,6 +97,43 @@
 
 .message-menu button.text-danger {
   color: #dc3545;
+}
+
+.message-meta {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 4px;
+  margin-top: 4px;
+  font-size: 11px;
+  opacity: 0.75;
+}
+
+.receiver-meta {
+  justify-content: flex-start;
+}
+
+.message-time {
+  font-size: 10px;
+  white-space: nowrap;
+}
+
+.edited-label {
+  font-size: 9px;
+  font-style: italic;
+  line-height: 1;
+  color: rgba(255, 255, 255, 0.7);
+  margin-left: 2px;
+}
+
+.bg-primary .message-time,
+.bg-primary .edited-label {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.bg-light .message-time,
+.bg-light .edited-label {
+  color: rgba(0, 0, 0, 0.6);
 }
 
 .chat-input {

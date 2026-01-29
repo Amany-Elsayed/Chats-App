@@ -115,19 +115,21 @@
                   <div>{{ msg.content }}</div>
                 }
 
-                <!-- TIME -->
-                <div class="text-end small opacity-75 mt-1">
-                  {{ formatTime(msg.createdAt) }}
-                </div>
+                <!-- STATUS -->
+                <div
+                  class="message-meta"
+                  [class.receiver-meta]="msg.senderId !== currentUserId"
+                >
 
-                <!-- STATUS DOTS -->
-                @if (msg.senderId === currentUserId) {
+                  <span class="message-time">
+                    {{ formatTime(msg.createdAt) }}
+                  </span>
 
-                  <div class="text-end small mt-1">
-                    @if (msg.isEdited) {
-                      <small class="edited-label">edited</small>
-                    }
-                    
+                  @if (msg.isEdited) {
+                    <span class="edited-label">edited</span>
+                  }
+
+                  @if (msg.senderId === currentUserId) {
                     @if (!msg.delivered) {
                       <span class="dot sent"></span>
                     }
@@ -139,8 +141,9 @@
                       <span class="dot read"></span>
                       <span class="dot read"></span>
                     }
-                  </div>
-                }
+                  }
+
+                </div>
 
               </div>
             </div>
