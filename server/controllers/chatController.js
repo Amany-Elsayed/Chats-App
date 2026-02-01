@@ -34,7 +34,26 @@ const sendMessage = asyncHandler(async (req, res) => {
     const message = await Message.create({
         sender: req.userId,
         receiver: receiverId,
+        type: 'text',
         content
+    })
+
+    res.status(201).json(message)
+})
+
+const sendAudioMessage = asyncHandler(async (req, res) => {
+    const { receiverId, duration } = req.body
+
+    if (!req.file) throw new ApiError('No audio file uploaded', 400)
+
+    const audioUrl = `uploads/audio/${req.file.filename}`
+
+    const message = await Message.create({
+        sender: req.userId,
+        receiver: receiverId,
+        type: 'audio',
+        audioUrl,
+        duration,
     })
 
     res.status(201).json(message)
@@ -82,4 +101,4 @@ const deleteMessage = asyncHandler(async (req, res) => {
     res.sendStatus(200)
 })
 
-module.exports = { getUsers, getMessages, sendMessage, markAsRead, editMessage, deleteMessage }
+module.exports = { getUsers, getMessages, sendMessage, markAsRead, editMessage, deleteMessage, sendAudioMessage }

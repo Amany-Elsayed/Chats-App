@@ -11,9 +11,22 @@ const MessageSchema = new mongoose.Schema({
         ref: "User",
         required: true
     },
+    type: {
+        type: String,
+        enum: ['text', 'audio'],
+        default: 'text'
+    },
     content: {
         type: String,
-        required: true
+        default: '',
+    },
+    audioUrl: {
+        type: String,
+        default: ''
+    },
+    duration: {
+        type: Number,
+        default: 0
     },
     delivered: {
         type: Boolean,

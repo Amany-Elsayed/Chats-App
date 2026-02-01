@@ -7,6 +7,7 @@ import { FormsModule } from '@angular/forms';
 import { SocketService } from '../../core/services/socket-service';
 import { AuthService } from '../../core/services/auth-service';
 import { Subscription } from 'rxjs';
+import { environment } from '../../../enviroments/enviroment';
 
 @Component({
   selector: 'app-chat-component',
@@ -15,6 +16,8 @@ import { Subscription } from 'rxjs';
   styleUrl: './chat-component.css',
 })
 export class ChatComponent implements OnInit, OnDestroy{
+  environment = environment
+
   users: User[] = []
   selectedUser: User | null = null
   messages: (Message & { senderId?: string; receiverId?: string })[] = []
@@ -30,6 +33,15 @@ export class ChatComponent implements OnInit, OnDestroy{
 
   typingUsers = new Set<string>()
   typingTimeout: any
+
+  isRecording = false
+  mediaRecorder!: MediaRecorder
+  audioChunks: Blob[] = []
+  audioBlob: Blob | null = null
+  audioUrlPreview: string | null = null
+  recordingStartTime: number = 0
+  recordingDuration = 0
+  recordingInterval: any
 
   private subs: Subscription[] = []
 
@@ -220,12 +232,6 @@ export class ChatComponent implements OnInit, OnDestroy{
     if (!this.scrollContainer) return
 
     const el = this.scrollContainer.nativeElement
-
-    console.log({
-      scrollTop: el.scrollTop,
-      scrollHeight: el.scrollHeight,
-      clientHeight: el.clientHeight
-    });
     
     const threshold = 150
 
@@ -233,10 +239,6 @@ export class ChatComponent implements OnInit, OnDestroy{
       el.scrollHeight - (el.scrollTop + el.clientHeight) < threshold
 
     this.showNewMessageBtn = !this.isUserNearBottom
-  }
-
-  trackByMessageId(index: number, msg: Message) {
-    return msg._id
   }
 
   startEdit(msg: Message) {
@@ -266,4 +268,72 @@ export class ChatComponent implements OnInit, OnDestroy{
     this.openMenuId = this.openMenuId === id ? null : id
   }
 
+  async startRecording() {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+
+      this.mediaRecorder = new MediaRecorder(stream)
+      this.audioChunks = []
+      this.isRecording = true
+      this.recordingStartTime = Date.now()
+
+      this.mediaRecorder.ondataavailable = (event) => {
+        this.audioChunks.push(event.data)
+      }
+
+      this.mediaRecorder.onstop = () => {
+        this.audioBlob = new Blob(this.audioChunks, { type: 'audio/mpeg' })
+        this.audioUrlPreview = URL.createObjectURL(this.audioBlob)
+        this.isRecording = false
+        clearInterval(this.recordingInterval)
+
+        stream.getTracks().forEach(track => track.stop())
+      }
+
+      this.mediaRecorder.start()
+
+      this.recordingInterval = setInterval(() => {
+        this.recordingDuration = Math.floor((Date.now() - this.recordingStartTime) / 1000)
+      }, 1000)
+    } catch (err) {
+      alert('Microphone permission denied')
+    }
+  }
+
+
+  stopRecording() {
+    if (this.mediaRecorder && this.isRecording) {
+      this.mediaRecorder.stop()
+    }
+  }
+
+  cancelRecording() {
+    this.audioBlob = null
+    this.audioUrlPreview = null
+    this.audioChunks = []
+    this.recordingDuration = 0
+    this.isRecording = false
+
+    clearInterval(this.recordingInterval)
+  }
+
+  sendAudioMessage() {
+    if (!this.audioBlob || !this.selectedUser) return
+
+    const duration = this.recordingDuration
+
+    this.chatService.sendAudioMessage(
+      this.selectedUser._id,
+      this.audioBlob,
+      duration
+    ).subscribe({
+      next: (msg) => {
+        this.audioBlob = null
+        this.audioUrlPreview = null
+        this.recordingDuration = 0
+      },
+      error: err => console.error('Audio upload failed', err)
+    })
+
+  }
 }

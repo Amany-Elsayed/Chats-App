@@ -29,4 +29,13 @@ export class ChatService {
   markAsRead(userId: string): Observable<void> {
     return this.httpClient.put<void>(`${this.baseURL}/read/${userId}`, {})
   }
+
+  sendAudioMessage(receiverId: string, audioBlob: Blob, duration: number) {
+    const formData = new FormData()
+    formData.append('audio', audioBlob)
+    formData.append('receiverId', receiverId)
+    formData.append('duration', duration.toString())
+
+    return this.httpClient.post<Message>(`${this.baseURL}/audio-message`, formData)
+  }
 }

@@ -112,7 +112,14 @@
                   </div>
                 }
                 @else {
-                  <div>{{ msg.content }}</div>
+                  @if (msg.type === 'audio') {
+                    <audio controls preload="metadata"
+                      [src]="environment.baseURL + '/' + msg.audioUrl">
+                    </audio>
+                    <small class="text-muted ms-1">{{ msg.duration }}s</small>
+                  } @else {
+                    <div>{{ msg.content }}</div>
+                  }
                 }
 
                 <!-- STATUS -->
@@ -151,7 +158,7 @@
 
         </div>
 
-        <!-- NEW MESSAGE BUTTON -->
+        <!-- MESSAGE BUTTON -->
         @if (showNewMessageBtn) {
           <button
             class="btn btn-sm btn-secondary new-msg-btn"
@@ -173,13 +180,22 @@
             </div>
           }
 
-          <div class="d-flex">
+          <div class="d-flex align-items-center gap-2">
+            <!-- MIC BUTTON -->
+             <button
+              class="btn btn-outline-secondary"
+              (click)="startRecording()"
+              [disabled]="isRecording || !selectedUser"
+            >🎤
+            </button>
+
             <input
-              class="form-control me-2"
+              class="form-control"
               [(ngModel)]="newMessage"
               placeholder="Type a message"
               (input)="onTypingInput()"
               (keyup.enter)="sendMessage()"
+              [disabled]="isRecording"
             />
 
             <button
@@ -187,9 +203,25 @@
               (click)="sendMessage()"
               [disabled]="!newMessage || newMessage.trim().length === 0"
             >
-              Send
+            Send 
             </button>
           </div>
+
+          @if (isRecording) {
+            <div class="mt-2 text-danger">
+              Recording... {{ recordingDuration }}s
+              <button class="btn btn-sm btn-warning ms-2" (click)="stopRecording()">Stop</button>
+              <button class="btn btn-sm btn-secondary ms-2" (click)="cancelRecording()">Cancel</button>
+            </div>
+          }
+
+          @if (audioUrlPreview) {
+            <div class="mt-2">
+              <audio controls [src]="audioUrlPreview"></audio>
+              <button class="btn btn-sm btn-success ms-2" (click)="sendAudioMessage()">Send Voice</button>
+              <button class="btn btn-sm btn-secondary ms-2" (click)="cancelRecording()">Cancel</button>
+            </div>
+          }
 
         </div>
       }

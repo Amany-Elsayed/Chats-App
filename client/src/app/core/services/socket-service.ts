@@ -3,6 +3,7 @@ import { Socket, io } from 'socket.io-client';
 import { environment } from '../../../enviroments/enviroment';
 import { fromEvent, Observable, retry, Subject } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
+import { Message } from '../interfaces/message';
 
 @Injectable({
   providedIn: 'root',
@@ -96,5 +97,4 @@ export class SocketService {
   onMessageDeleted() {
     return fromEvent<{ messageId: string }>(this.socket, "messageDeleted")
   }
-
 }
