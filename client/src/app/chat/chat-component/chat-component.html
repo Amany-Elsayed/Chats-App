@@ -1,6 +1,5 @@
 <div class="container-fluid">
   <div class="row vh-100">
-
     <!-- USERS LIST -->
     <div class="col-3 border-end p-3">
       <h5>Users</h5>
@@ -15,14 +14,14 @@
             class="list-group-item d-flex justify-content-between align-items-center"
             (click)="selectUser(user)"
             [class.active]="selectedUser?._id === user._id"
-            style="cursor: pointer;"
+            style="cursor: pointer"
           >
             {{ user.username }}
             <span
               class="rounded-circle"
               [class.bg-success]="user.online"
               [class.bg-secondary]="!user.online"
-              style="width: 10px; height: 10px; display: inline-block;"
+              style="width: 10px; height: 10px; display: inline-block"
             ></span>
           </li>
         }
@@ -31,16 +30,9 @@
 
     <!-- CHAT AREA -->
     <div class="col-9 d-flex flex-column">
-
       <!-- MESSAGES -->
       <div class="chat-body">
-
-        <div
-          class="chat-messages"
-          #scrollContainer
-          (scroll)="onScroll()"
-        >
-
+        <div class="chat-messages" #scrollContainer (scroll)="onScroll()">
           @if (!selectedUser) {
             <p class="text-muted">Select a user to start chatting</p>
           }
@@ -51,15 +43,13 @@
               [class.justify-content-end]="msg.senderId === currentUserId"
               [class.justify-content-start]="msg.senderId !== currentUserId"
             >
-
               <div
                 class="message-bubble position-relative p-2 rounded shadow-sm"
                 [ngClass]="{
                   'bg-primary text-white': msg.senderId === currentUserId,
-                  'bg-light text-dark': msg.senderId !== currentUserId
+                  'bg-light text-dark': msg.senderId !== currentUserId,
                 }"
               >
-
                 <!-- MESSAGE ACTIONS -->
                 @if (msg.senderId === currentUserId) {
                   <div class="message-actions">
@@ -73,16 +63,13 @@
 
                     @if (openMenuId === msg._id) {
                       <div class="message-menu">
-                        <button
-                          class="dropdown-item text-edit"
-                          (click)="startEdit(msg)"
-                        >
-                          Edit
-                        </button>
-                        <button
-                          class="dropdown-item text-danger"
-                          (click)="deleteMsg(msg)"
-                        >
+                        @if (msg.type === 'text') {
+                          <button class="dropdown-item text-edit" (click)="startEdit(msg)">
+                            Edit
+                          </button>
+                        }
+
+                        <button class="dropdown-item text-danger" (click)="deleteMsg(msg)">
                           Delete
                         </button>
                       </div>
@@ -92,42 +79,25 @@
 
                 <!-- EDIT MODE -->
                 @if (editingMessageId === msg._id) {
-                  <input
-                    class="form-control form-control-sm mb-1"
-                    [(ngModel)]="editedContent"
-                  />
+                  <input class="form-control form-control-sm mb-1" [(ngModel)]="editedContent" />
                   <div class="text-end">
-                    <button
-                      class="btn btn-sm btn-success me-1"
-                      (click)="saveEdit(msg)"
-                    >
+                    <button class="btn btn-sm btn-success me-1" (click)="saveEdit(msg)">
                       Save
                     </button>
-                    <button
-                      class="btn btn-sm btn-secondary"
-                      (click)="cancelEdit()"
-                    >
-                      Cancel
-                    </button>
+                    <button class="btn btn-sm btn-secondary" (click)="cancelEdit()">Cancel</button>
                   </div>
-                }
-                @else {
+                } @else {
                   @if (msg.type === 'audio') {
-                    <audio controls preload="metadata"
-                      [src]="environment.baseURL + '/' + msg.audioUrl">
-                    </audio>
-                    <small class="text-muted ms-1">{{ msg.duration }}s</small>
+                    <div class="audio-bubble audio-with-menu">
+                      <audio controls [src]="environment.baseURL + '/' + msg.audioUrl"></audio>
+                    </div>
                   } @else {
                     <div>{{ msg.content }}</div>
                   }
                 }
 
                 <!-- STATUS -->
-                <div
-                  class="message-meta"
-                  [class.receiver-meta]="msg.senderId !== currentUserId"
-                >
-
+                <div class="message-meta" [class.receiver-meta]="msg.senderId !== currentUserId">
                   <span class="message-time">
                     {{ formatTime(msg.createdAt) }}
                   </span>
@@ -139,54 +109,43 @@
                   @if (msg.senderId === currentUserId) {
                     @if (!msg.delivered) {
                       <span class="dot sent"></span>
-                    }
-                    @else if (msg.delivered && !msg.read) {
+                    } @else if (msg.delivered && !msg.read) {
                       <span class="dot delivered"></span>
                       <span class="dot delivered"></span>
-                    }
-                    @else if (msg.read) {
+                    } @else if (msg.read) {
                       <span class="dot read"></span>
                       <span class="dot read"></span>
                     }
                   }
-
                 </div>
-
               </div>
             </div>
           }
-
         </div>
 
         <!-- MESSAGE BUTTON -->
         @if (showNewMessageBtn) {
-          <button
-            class="btn btn-sm btn-secondary new-msg-btn"
-            (click)="scrollToBottom(true)"
-          >
+          <button class="btn btn-sm btn-secondary new-msg-btn" (click)="scrollToBottom(true)">
             New messages ↓
           </button>
         }
-
       </div>
 
       <!-- INPUT -->
       @if (selectedUser) {
         <div class="p-3 border-top chat-input">
-
           @if (isSelectedUserTyping()) {
-            <div class="text-muted small mb-1">
-              {{ selectedUser.username }} is typing...
-            </div>
+            <div class="text-muted small mb-1">{{ selectedUser.username }} is typing...</div>
           }
 
           <div class="d-flex align-items-center gap-2">
             <!-- MIC BUTTON -->
-             <button
+            <button
               class="btn btn-outline-secondary"
-              (click)="startRecording()"
-              [disabled]="isRecording || !selectedUser"
-            >🎤
+              (click)="isRecording ? stopRecording() : startRecording()"
+              [disabled]="!selectedUser"
+            >
+              🎤
             </button>
 
             <input
@@ -203,29 +162,44 @@
               (click)="sendMessage()"
               [disabled]="!newMessage || newMessage.trim().length === 0"
             >
-            Send 
+              Send
             </button>
           </div>
 
+          <!-- RECORDING BAR -->
+
           @if (isRecording) {
-            <div class="mt-2 text-danger">
-              Recording... {{ recordingDuration }}s
-              <button class="btn btn-sm btn-warning ms-2" (click)="stopRecording()">Stop</button>
-              <button class="btn btn-sm btn-secondary ms-2" (click)="cancelRecording()">Cancel</button>
+            <div class="recording-bar mt-2">
+              <span>🎤 Recording... {{ recordingDuration }}s</span>
+
+              <button class="btn btn-sm btn-danger ms-2" (click)="stopRecording()">Stop</button>
+              <button class="btn btn-sm btn-outline-secondary ms-1" (click)="cancelRecording()">
+                Cancel
+              </button>
             </div>
           }
 
-          @if (audioUrlPreview) {
-            <div class="mt-2">
+          @if (audioUrlPreview && !isRecording) {
+            <div class="audio-preview mt-2 d-flex align-items-center gap-2">
               <audio controls [src]="audioUrlPreview"></audio>
-              <button class="btn btn-sm btn-success ms-2" (click)="sendAudioMessage()">Send Voice</button>
-              <button class="btn btn-sm btn-secondary ms-2" (click)="cancelRecording()">Cancel</button>
+
+              <span class="audio-duration">{{ recordingDuration }}s</span>
+
+              <button type="button" class="btn btn-sm btn-success" (click)="sendAudioMessage()">
+                Send
+              </button>
+
+              <button
+                type="button"
+                class="btn btn-sm btn-outline-secondary"
+                (click)="cancelRecording()"
+              >
+                Cancel
+              </button>
             </div>
           }
-
         </div>
       }
-
     </div>
   </div>
 </div>

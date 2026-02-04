@@ -48,15 +48,11 @@ const sendAudioMessage = asyncHandler(async (req, res) => {
 
     const audioUrl = `uploads/audio/${req.file.filename}`
 
-    const message = await Message.create({
-        sender: req.userId,
-        receiver: receiverId,
-        type: 'audio',
+    res.status(201).json({
+        receiverId,
         audioUrl,
-        duration,
+        duration
     })
-
-    res.status(201).json(message)
 })
 
 const markAsRead = asyncHandler(async (req, res) => {

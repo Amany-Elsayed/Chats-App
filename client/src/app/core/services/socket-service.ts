@@ -38,6 +38,10 @@ export class SocketService {
     this.socket.emit('sendMessage', { receiverId, content })
   }
 
+  sendAudioMessage(data: { receiverId: string; audioUrl: string; duration: number }) {
+    this.socket.emit('sendAudioMessage', data)
+  }
+
   emitTyping(receiverId: string): void {
     this.socket.emit('typing', { receiverId })
   }

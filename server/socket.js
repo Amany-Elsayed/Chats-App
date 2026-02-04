@@ -5,7 +5,7 @@ const onlineUsers = new Set();
 
 const socketServer = (server) => {
   const io = require("socket.io")(server, {
-    cors: { origin: "*" }
+    cors: { origin: "*" },
   });
 
   io.on("connection", (socket) => {
@@ -30,11 +30,35 @@ const socketServer = (server) => {
           receiver: receiverId,
           type: "text",
           content,
-          delivered: isReceiverOnline
+          delivered: isReceiverOnline,
         });
 
         io.to(receiverId).emit("receiveMessage", message);
         io.to(userId).emit("receiveMessage", message);
+      });
+
+      socket.on("sendAudioMessage", async ({ receiverId, audioUrl, duration }) => {
+        const isReceiverOnline = onlineUsers.has(receiverId);
+
+        const message = await Message.create({
+          sender: userId,
+          receiver: receiverId,
+          type: "audio",
+          audioUrl,
+          duration,
+          delivered: isReceiverOnline,
+        });
+
+        io.to(receiverId).emit("receiveMessage", message);
+        io.to(userId).emit("receiveMessage", message);
+      });
+
+      socket.on("typing", ({ receiverId }) => {
+        io.to(receiverId).emit("userTyping", { userId });
+      });
+
+      socket.on("stopTyping", ({ receiverId }) => {
+        io.to(receiverId).emit("userStopTyping", { userId });
       });
 
       socket.on("editMessage", async ({ messageId, content }) => {
@@ -45,8 +69,14 @@ const socketServer = (server) => {
         msg.isEdited = true;
         await msg.save();
 
-        io.to(msg.sender.toString()).emit("messageEdited", msg);
-        io.to(msg.receiver.toString()).emit("messageEdited", msg);
+        io.to(msg.sender.toString()).emit("messageEdited", {
+          messageId,
+          content,
+        });
+        io.to(msg.receiver.toString()).emit("messageEdited", {
+          messageId,
+          content,
+        });
       });
 
       socket.on("deleteMessage", async ({ messageId }) => {
@@ -59,11 +89,40 @@ const socketServer = (server) => {
         io.to(msg.receiver.toString()).emit("messageDeleted", { messageId });
       });
 
+      socket.on("messageDelivered", async ({ messageId }) => {
+        const msg = await Message.findByIdAndUpdate(
+          messageId,
+          { delivered: true },
+          { new: true }
+        );
+
+        if (!msg) return;
+
+        io.to(msg.sender.toString()).emit("messageStatusUpdate", {
+          messageId,
+          delivered: true,
+        });
+      });
+
+      socket.on("messageRead", async ({ messageIds }) => {
+        const msgs = await Message.find({ _id: { $in: messageIds } });
+
+        await Message.updateMany(
+          { _id: { $in: messageIds } },
+          { read: true, delivered: true }
+        );
+
+        msgs.forEach((msg) => {
+          io.to(msg.sender.toString()).emit("messageReadUpdate", {
+            messageId: msg._id,
+          });
+        });
+      });
+
       socket.on("disconnect", () => {
         onlineUsers.delete(userId);
         io.emit("userOffline", userId);
       });
-
     } catch (err) {
       console.log("Socket error", err.message);
       socket.disconnect();

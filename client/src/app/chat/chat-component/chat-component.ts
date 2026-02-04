@@ -327,10 +327,17 @@ export class ChatComponent implements OnInit, OnDestroy{
       this.audioBlob,
       duration
     ).subscribe({
-      next: (msg) => {
+      next: (res) => {
+        this.socketService.sendAudioMessage({
+          receiverId: this.selectedUser!._id,
+          audioUrl: res.audioUrl,
+          duration: res.duration
+        })
+
         this.audioBlob = null
         this.audioUrlPreview = null
         this.recordingDuration = 0
+        this.isRecording = false
       },
       error: err => console.error('Audio upload failed', err)
     })
