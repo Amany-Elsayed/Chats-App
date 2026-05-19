@@ -20,6 +20,10 @@ app.use('/uploads', express.static('uploads'))
 app.use("/api/auth", authRoutes)
 app.use("/api/chat", chatRoutes)
 
+app.get("/", (req, res) => {
+    res.send("API is running");
+});
+
 mongoose.connect(process.env.MONGO_URI)
     .then(() => console.log('MongoDB connected'))
     .catch(err => console.log(err))
