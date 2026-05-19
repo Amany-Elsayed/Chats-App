@@ -12,7 +12,16 @@ dotenv.config();
 const app = express();
 const server = http.createServer(app);
 
-app.use(cors({ origin: "https://amany-elsayed.github.io" }));
+app.use(
+  cors({
+    origin: "https://amany-elsayed.github.io",
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  }),
+);
+
+app.options("*", cors());
+
 app.use(express.json());
 
 app.use("/uploads", express.static("uploads"));
