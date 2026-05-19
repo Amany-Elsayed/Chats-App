@@ -1,4 +1,4 @@
 export const environment = {
-    baseURL: 'http://localhost:3000',
+    baseURL: 'chats-app-production-4fde.up.railway.app',
     production: false
 };
